@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+import '../OnBoarding/OnBoarding_Screen.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -13,11 +15,13 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) =>
-        const Scaffold(body: Center(child: Text("Main Screen")))),
+        MaterialPageRoute(
+          builder: (_) => const OnboardingScreen(),
+        ),
       );
     });
   }
