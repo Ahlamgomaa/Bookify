@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../Model/OnBoarding_Model.dart';
+import '../../../Core/constants.dart';
+import '../../../Data/Models/OnBoarding_Model.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({
@@ -8,22 +9,23 @@ class OnboardingPage extends StatelessWidget {
     required this.currentPage,
     required this.totalPages,
     required this.onNext,
+    required this.onSkip,
+    required this.onFinish,
   });
 
   final OnboardingModel model;
   final int currentPage;
   final int totalPages;
   final VoidCallback onNext;
+  final VoidCallback onSkip;
+  final VoidCallback onFinish;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.asset(
-            model.image,
-            fit: BoxFit.cover,
-          ),
+          child: Image.asset(model.image, fit: BoxFit.cover),
         ),
 
         Align(
@@ -33,7 +35,7 @@ class OnboardingPage extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
-              color: Color(0xFF2C3E50),
+              color: AppColors.navyBlue,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(40),
                 topRight: Radius.circular(40),
@@ -68,12 +70,10 @@ class OnboardingPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
-                      onPressed: () {},
+                      onPressed: onSkip,
                       child: const Text(
                         "Skip",
-                        style: TextStyle(
-                          color: Color(0xFFD35400),
-                        ),
+                        style: TextStyle(color: AppColors.pumpkinOrange),
                       ),
                     ),
 
@@ -86,8 +86,8 @@ class OnboardingPage extends StatelessWidget {
                           height: currentPage == index ? 10 : 8,
                           decoration: BoxDecoration(
                             color: currentPage == index
-                                ? const Color(0xFFD35400)
-                                : const Color(0xFFD35400).withOpacity(0.4),
+                                ? AppColors.pumpkinOrange
+                                : AppColors.pumpkinOrange.withOpacity(0.4),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -95,20 +95,20 @@ class OnboardingPage extends StatelessWidget {
                     ),
 
                     TextButton(
-                      onPressed: onNext,
-                      child: const Text(
-                        "Next",
-                        style: TextStyle(
-                          color: Color(0xFFD35400),
-                        ),
+                      onPressed: currentPage == totalPages - 1
+                          ? onFinish
+                          : onNext,
+                      child: Text(
+                        currentPage == totalPages - 1 ? "Finish" : "Next",
+                        style: const TextStyle(color: AppColors.pumpkinOrange),
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
-        )
+        ),
       ],
     );
   }

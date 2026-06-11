@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../Model/OnBoarding_Model.dart';
+import '../../Data/Models/OnBoarding_Model.dart';
 import 'Widgets/OnBoarding_Page.dart';
+import '../Auth/SignIn/sign_in_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -11,29 +12,32 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
-
   int currentPage = 0;
 
   final List<OnboardingModel> pages = [
     OnboardingModel(
       image: "assets/images/onboarding1.jpg",
       title: "Explore Upcoming and Nearby Events",
-      description:
-      "Find events happening around you and stay updated with the latest activities.",
+      description: "Find events happening around you and stay updated.",
     ),
     OnboardingModel(
       image: "assets/images/onboarding2.jpg",
-      title: "We Have Modern Events Calendar Feature",
-      description:
-      "Track and organize your events easily with our modern calendar.",
+      title: "Modern Events Calendar",
+      description: "Track and organize your events easily.",
     ),
     OnboardingModel(
       image: "assets/images/onboarding3.jpg",
-      title: "Look Up More Events Nearby By Map",
-      description:
-      "Discover events around your location using interactive maps.",
+      title: "Find Events on Map",
+      description: "Discover events around your location.",
     ),
   ];
+
+  void goToSignIn() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const SignInScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,24 +47,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         controller: _pageController,
         itemCount: pages.length,
         onPageChanged: (index) {
-          setState(() {
-            currentPage = index;
-          });
+          setState(() => currentPage = index);
         },
         itemBuilder: (context, index) {
           return OnboardingPage(
             model: pages[index],
             currentPage: currentPage,
             totalPages: pages.length,
+
             onNext: () {
-              if (index < pages.length - 1) {
-                _pageController.nextPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              } else {
-              }
+              _pageController.nextPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
             },
+
+            onSkip: goToSignIn,
+
+            onFinish: goToSignIn,
           );
         },
       ),
