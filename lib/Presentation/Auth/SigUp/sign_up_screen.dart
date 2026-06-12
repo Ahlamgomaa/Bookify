@@ -36,7 +36,7 @@ class SignUpScreen extends StatelessWidget {
               width: double.infinity, height: 55,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.pumpkinOrange,
+                    backgroundColor: AppColors.navyBlue,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
                 ),
                 onPressed: () {},

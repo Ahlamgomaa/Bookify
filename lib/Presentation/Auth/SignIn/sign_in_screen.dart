@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
+import '../../EventDetails/event_details_screen.dart';
 import '../SigUp/sign_up_screen.dart';
 
 class SignInScreen extends StatelessWidget {
@@ -30,8 +31,13 @@ class SignInScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity, height: 55,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.pumpkinOrange, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.navyBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const EventDetailsScreen()),
+                    );
+                  },
                   child: const Text("Sign In", style: TextStyle(color:Colors.white , fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
