@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import '../../../Core/constants.dart';
-// تأكدي من استيراد صفحة البحث الخاصة بكِ هنا
 import '../../search/search_screen.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -59,7 +58,6 @@ class HomeHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-              // تعديل هنا: إضافة GestureDetector للبحث
               GestureDetector(
                 onTap: () {
                   Navigator.push(
