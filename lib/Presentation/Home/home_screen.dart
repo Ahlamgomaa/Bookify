@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import '../../Core/constants.dart';
 import '../Events/events_screen.dart';
+import '../Profile/orgnizer_profile_screen.dart';
 import 'widgets/home_header.dart';
 import 'widgets/event_card.dart';
 import 'widgets/invite_banner.dart';
@@ -50,8 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const EventsScreen(),
-            const Center(child: Text("Map Page")),
-            const Center(child: Text("Profile Page")),
+
+            const  Center(child: Text("Profile Page")),
+            const     OrganizerProfileScreen(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(

@@ -42,7 +42,7 @@ class InviteBanner extends StatelessWidget {
             ),
           ),
           Image.asset(
-            'assets/images/splash_logo.png',
+            'assets/images/gift.png',
             width: 200,
             height: 120,
             fit: BoxFit.contain,
