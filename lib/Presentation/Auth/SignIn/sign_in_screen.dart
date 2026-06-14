@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
 import '../../EventDetails/event_details_screen.dart';
+import '../../Home/home_screen.dart';
 import '../SigUp/sign_up_screen.dart';
 
 class SignInScreen extends StatelessWidget {
@@ -35,7 +36,7 @@ class SignInScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const EventDetailsScreen()),
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
                     );
                   },
                   child: const Text("Sign In", style: TextStyle(color:Colors.white , fontSize: 16, fontWeight: FontWeight.bold)),
