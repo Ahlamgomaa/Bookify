@@ -43,8 +43,8 @@ class InviteBanner extends StatelessWidget {
           ),
           Image.asset(
             'assets/images/gift.png',
-            width: 80,
-            height: 80,
+            width: 200,
+            height: 120,
             fit: BoxFit.contain,
           ),
         ],

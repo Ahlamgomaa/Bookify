@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
-
 import '../../../Core/constants.dart';
+// تأكدي من استيراد صفحة البحث الخاصة بكِ هنا
+import '../../search/search_screen.dart';
 
 class HomeHeader extends StatelessWidget {
   final AdvancedDrawerController controller;
@@ -58,34 +59,43 @@ class HomeHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  const Icon(Icons.search, color: Colors.white, size: 28),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text(
-                      "Search...",
-                      style: TextStyle(color: Colors.white70),
+              // تعديل هنا: إضافة GestureDetector للبحث
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SearchScreen()),
+                  );
+                },
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: Colors.white, size: 28),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        "Search...",
+                        style: TextStyle(color: Colors.white70),
+                      ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.tune, color: Colors.white, size: 16),
+                          SizedBox(width: 5),
+                          Text("Filters", style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.tune, color: Colors.white, size: 16),
-                        SizedBox(width: 5),
-                        Text("Filters", style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
