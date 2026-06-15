@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../Core/constants.dart';
 
+import '../../EventDetails/event_details_screen.dart';
+import '../../../Data/Models/event_model.dart';
+
 class SearchResultCard extends StatelessWidget {
-  const SearchResultCard({super.key});
+  final EventModel event;
+
+  const SearchResultCard({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
@@ -21,42 +26,58 @@ class SearchResultCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => EventDetailsScreen(eventId: event.id)),
+          );
+        },
+        child: Row(
+          children: [
           Container(
             width: 80,
             height: 80,
             decoration: BoxDecoration(
               color: Colors.blue.shade100,
               borderRadius: BorderRadius.circular(15),
+              image: event.imageUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(event.imageUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
           ),
           const SizedBox(width: 15),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "1st May - Sat - 2:00 PM",
-                  style: TextStyle(
+                  event.localDate ?? "Unknown Date",
+                  style: const TextStyle(
                     color: AppColors.pumpkinOrange,
                     fontSize: 12,
                   ),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 Text(
-                  "A virtual evening of\nsmooth jazz",
-                  style: TextStyle(
+                  event.name,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                     color: AppColors.navyBlue,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
         ],
       ),
+    ),
     );
   }
 }

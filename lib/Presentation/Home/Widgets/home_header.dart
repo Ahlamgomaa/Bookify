@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import '../../../Core/constants.dart';
-import '../../search/search_screen.dart';
+import '../../Search/search_screen.dart';
+import '../../../Data/Models/category_model.dart';
 
 class HomeHeader extends StatelessWidget {
   final AdvancedDrawerController controller;
-  const HomeHeader({super.key, required this.controller});
+  final Future<List<CategoryModel>>? categoriesFuture;
+
+  const HomeHeader({super.key, required this.controller, this.categoriesFuture});
 
   @override
   Widget build(BuildContext context) {
@@ -98,31 +101,55 @@ class HomeHeader extends StatelessWidget {
             ],
           ),
         ),
-        Positioned(bottom: -20, left: 20, right: 20, child: _buildCategories()),
+        Positioned(bottom: -20, left: 20, right: 20, child: _buildCategories(context)),
       ],
     );
   }
 
-  Widget _buildCategories() {
+  Widget _buildCategories(BuildContext context) {
     return SizedBox(
       height: 45,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          _categoryItem(
-            "Sports",
-            Icons.sports_basketball,
-            const Color(0xFFFF8D5D),
+      child: categoriesFuture == null 
+        ? const SizedBox() 
+        : FutureBuilder<List<CategoryModel>>(
+            future: categoriesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const SizedBox();
+              }
+              final categories = snapshot.data!;
+              final colors = [const Color(0xFFFF8D5D), const Color(0xFF7D67FF), const Color(0xFF00C7BE)];
+              
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final cat = categories[index];
+                  return _categoryItem(
+                    context, 
+                    cat.name, 
+                    Icons.category, // using generic icon
+                    colors[index % colors.length]
+                  );
+                },
+              );
+            },
           ),
-          _categoryItem("Music", Icons.music_note, const Color(0xFF7D67FF)),
-          _categoryItem("Food", Icons.fastfood, const Color(0xFF00C7BE)),
-        ],
-      ),
     );
   }
 
-  Widget _categoryItem(String title, IconData icon, Color color) {
-    return Container(
+  Widget _categoryItem(BuildContext context, String title, IconData icon, Color color) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SearchScreen(initialQuery: title)),
+        );
+      },
+      child: Container(
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -142,6 +169,7 @@ class HomeHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

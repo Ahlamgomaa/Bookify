@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
 import 'invite_card.dart';
 import 'event_helper_widgets.dart';
+import '../../../Data/Models/event_model.dart';
 
 class EventDetailsSheet extends StatelessWidget {
-  const EventDetailsSheet({super.key});
+  final EventModel? event;
+
+  const EventDetailsSheet({super.key, this.event});
 
   @override
   Widget build(BuildContext context) {
@@ -23,10 +26,21 @@ class EventDetailsSheet extends StatelessWidget {
                 controller: controller,
                 padding: const EdgeInsets.fromLTRB(20, 50, 20, 100),
                 children: [
-                  const Text("International Band Music Concert", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navyBlue)),
+                  Text(
+                    event?.name ?? "Event Name", 
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navyBlue)
+                  ),
                   const SizedBox(height: 25),
-                  buildIconTile(Icons.calendar_month, "14 December, 2021", "Tuesday, 4:00PM - 9:00PM"),
-                  buildIconTile(Icons.location_on_outlined, "Gala Convention Center", "36 Guild Street London, UK"),
+                  buildIconTile(
+                    Icons.calendar_month, 
+                    event?.localDate ?? "Unknown Date", 
+                    event?.localTime ?? "Unknown Time"
+                  ),
+                  buildIconTile(
+                    Icons.location_on_outlined, 
+                    event?.venueName ?? "Unknown Venue", 
+                    event?.cityName ?? "Unknown City"
+                  ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const CircleAvatar(radius: 25, backgroundColor: Colors.grey),
@@ -41,7 +55,10 @@ class EventDetailsSheet extends StatelessWidget {
                   const SizedBox(height: 20),
                   const Text("About Event", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navyBlue)),
                   const SizedBox(height: 10),
-                  const Text("Enjoy your favorite dishes and a lovely time...", style: TextStyle(color: Colors.grey, height: 1.5)),
+                  Text(
+                    event?.description ?? "No description available for this event.", 
+                    style: const TextStyle(color: Colors.grey, height: 1.5)
+                  ),
                 ],
               ),
             ),

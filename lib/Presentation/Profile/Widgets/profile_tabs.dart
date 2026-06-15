@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
 import '../../Events/Widgets/event_cards.dart';
+import '../../../Data/Models/event_model.dart';
 import 'review_card.dart';
 
 class ProfileTabs extends StatelessWidget {
@@ -36,11 +37,10 @@ class ProfileTabs extends StatelessWidget {
                   horizontal: 20,
                   vertical: 15,
                 ),
-                children: const [
-                  EventCards(),
-                  EventCards(),
-                  EventCards(),
-                  EventCards(),
+                children: [
+                  EventCards(event: EventModel(id: "1", name: "Music Concert", localDate: "2023-10-15", venueName: "Grand Hall")),
+                  EventCards(event: EventModel(id: "2", name: "Art Exhibition", localDate: "2023-11-20", venueName: "City Gallery")),
+                  EventCards(event: EventModel(id: "3", name: "Tech Meetup", localDate: "2023-12-05", venueName: "Convention Center")),
                 ],
               ),
 

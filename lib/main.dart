@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'Presentation/Splash/splash_screen.dart';
 
-void main() {
+import 'network/dio_helper.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DioHelper.init();
   runApp(const MyApp());
 }
 
