@@ -23,6 +23,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _advancedDrawerController = AdvancedDrawerController();
   int _currentIndex = 0;
+  int _profileKey = 0;
   
   late EventsRepository repository;
   late Future<List<EventModel>> homeEventsFuture;
@@ -34,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     repository = EventsRepository(EventsDataSource());
     homeEventsFuture = repository.getHomeEvents();
-    nearbyEventsFuture = repository.getNearbyEvents("51.5074,-0.1278"); // London latlong
+    nearbyEventsFuture = repository.getNearbyEvents("51.5074,-0.1278");
     categoriesFuture = repository.getCategories();
   }
 
@@ -119,12 +120,17 @@ class _HomeScreenState extends State<HomeScreen> {
             const EmptyEventsScreen(),
 
             const Center(child: Text("Profile Page")),
-            const OrganizerProfileScreen(),
+            OrganizerProfileScreen(key: ValueKey(_profileKey)),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+              if (index == 3) _profileKey++;
+            });
+          },
           type: BottomNavigationBarType.fixed,
           selectedItemColor: AppColors.navyBlue,
           unselectedItemColor: Colors.grey,

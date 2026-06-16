@@ -49,7 +49,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           return Stack(
             children: [
               EventHeaderImage(imageUrl: event?.imageUrl),
-              const HeaderBar(),
+              HeaderBar(eventId: widget.eventId),
               EventDetailsSheet(event: event), 
               const BuyTicketButton(),
             ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
-import '../../Events/Widgets/event_cards.dart';
-import '../../../Data/Models/event_model.dart';
+import 'fav_events_tab.dart';
 import 'review_card.dart';
 
 class ProfileTabs extends StatelessWidget {
@@ -17,7 +16,7 @@ class ProfileTabs extends StatelessWidget {
           indicatorColor: AppColors.navyBlue,
           tabs: [
             Tab(text: "About"),
-            Tab(text: "Events"),
+            Tab(text: "Fav Events"),
             Tab(text: "Reviews"),
           ],
         ),
@@ -32,20 +31,10 @@ class ProfileTabs extends StatelessWidget {
                 ),
               ),
 
-              ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 15,
-                ),
-                children: [
-                  EventCards(event: EventModel(id: "1", name: "Music Concert", localDate: "2023-10-15", venueName: "Grand Hall")),
-                  EventCards(event: EventModel(id: "2", name: "Art Exhibition", localDate: "2023-11-20", venueName: "City Gallery")),
-                  EventCards(event: EventModel(id: "3", name: "Tech Meetup", localDate: "2023-12-05", venueName: "Convention Center")),
-                ],
-              ),
+              const FavEventsTab(),
 
               ListView(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 children: [ReviewCard(), ReviewCard(), ReviewCard()],
               ),
             ],

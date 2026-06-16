@@ -1,18 +1,48 @@
 import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
+import '../../../Data/Local/database_helper.dart';
+import '../../../Data/Local/shared_prefs_helper.dart';
 
-class ProfileHeader extends StatelessWidget {
+class ProfileHeader extends StatefulWidget {
   const ProfileHeader({super.key});
+
+  @override
+  State<ProfileHeader> createState() => _ProfileHeaderState();
+}
+
+class _ProfileHeaderState extends State<ProfileHeader> {
+  String _userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final userId = await SharedPrefsHelper.getUserId();
+    if (userId == null) return;
+    final user = await DatabaseHelper.instance.getUserById(userId);
+    if (user != null && mounted) {
+      setState(() {
+        _userName = user['name'] ?? '';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const CircleAvatar(radius: 45, backgroundColor: AppColors.navyBlue),
+        const CircleAvatar(
+          radius: 45,
+          backgroundColor: AppColors.navyBlue,
+          child: Icon(Icons.person, size: 45, color: Colors.white),
+        ),
         const SizedBox(height: 15),
-        const Text(
-          "Ahlam Gomaa",
-          style: TextStyle(
+        Text(
+          _userName.isEmpty ? '...' : _userName,
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: AppColors.navyBlue,
