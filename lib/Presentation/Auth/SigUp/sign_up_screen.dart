@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
-import '../../../Data/Local/database_helper.dart';
-import '../../../Data/Local/secure_storage_helper.dart';
-import '../../../Data/Local/shared_prefs_helper.dart';
+import '../../../Data/repository/local_repository.dart';
 import '../../Home/home_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -13,6 +11,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _localRepo = LocalRepository();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -37,20 +36,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() { _isLoading = true; });
 
     try {
-      final existingUser = await DatabaseHelper.instance.getUserByEmail(email);
+      final existingUser = await _localRepo.getUserByEmail(email);
       if (existingUser != null) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email already exists')));
         return;
       }
 
-      int userId = await DatabaseHelper.instance.insertUser({
+      int userId = await _localRepo.insertUser({
         'name': name,
         'email': email,
         'remember_me': 1,
       });
 
-      await SecureStorageHelper.savePassword(email, password);
-      await SharedPrefsHelper.setLoggedIn(true, userId: userId);
+      await _localRepo.savePassword(email, password);
+      await _localRepo.setLoggedIn(true, userId: userId);
 
       if (mounted) {
         Navigator.pushAndRemoveUntil(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../Data/Local/database_helper.dart';
-import '../../../Data/Local/shared_prefs_helper.dart';
+import '../../../Data/repository/local_repository.dart';
 
 class HeaderBar extends StatefulWidget {
   final String? eventId;
@@ -11,6 +10,7 @@ class HeaderBar extends StatefulWidget {
 }
 
 class _HeaderBarState extends State<HeaderBar> {
+  final _localRepo = LocalRepository();
   bool _isFavorite = false;
   int? _userId;
 
@@ -21,10 +21,10 @@ class _HeaderBarState extends State<HeaderBar> {
   }
 
   Future<void> _loadFavoriteState() async {
-    final userId = await SharedPrefsHelper.getUserId();
+    final userId = await _localRepo.getUserId();
     if (userId == null || widget.eventId == null) return;
 
-    final isFav = await DatabaseHelper.instance.isFavorite(userId, widget.eventId!);
+    final isFav = await _localRepo.isFavorite(userId, widget.eventId!);
     if (mounted) {
       setState(() {
         _userId = userId;
@@ -37,9 +37,9 @@ class _HeaderBarState extends State<HeaderBar> {
     if (_userId == null || widget.eventId == null) return;
 
     if (_isFavorite) {
-      await DatabaseHelper.instance.removeFavorite(_userId!, widget.eventId!);
+      await _localRepo.removeFavorite(_userId!, widget.eventId!);
     } else {
-      await DatabaseHelper.instance.insertFavorite(_userId!, widget.eventId!);
+      await _localRepo.insertFavorite(_userId!, widget.eventId!);
     }
     if (mounted) {
       setState(() { _isFavorite = !_isFavorite; });

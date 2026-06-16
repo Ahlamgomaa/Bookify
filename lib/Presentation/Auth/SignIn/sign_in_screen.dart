@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
-import '../../../Data/Local/database_helper.dart';
-import '../../../Data/Local/secure_storage_helper.dart';
-import '../../../Data/Local/shared_prefs_helper.dart';
+import '../../../Data/repository/local_repository.dart';
 import '../../Home/home_screen.dart';
 import '../SigUp/sign_up_screen.dart';
 
@@ -14,6 +12,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  final _localRepo = LocalRepository();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -31,13 +30,13 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() { _isLoading = true; });
 
     try {
-      final user = await DatabaseHelper.instance.getUserByEmail(email);
+      final user = await _localRepo.getUserByEmail(email);
       if (user == null) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User not found')));
         return;
       }
 
-      final storedPassword = await SecureStorageHelper.getPassword(email);
+      final storedPassword = await _localRepo.getPassword(email);
       if (storedPassword != password) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Incorrect password')));
         return;
@@ -45,14 +44,14 @@ class _SignInScreenState extends State<SignInScreen> {
 
       // Update remember_me flag
       int rememberMeValue = _rememberMe ? 1 : 0;
-      await DatabaseHelper.instance.updateUser({
+      await _localRepo.updateUser({
         'id': user['id'],
         'name': user['name'],
         'email': user['email'],
         'remember_me': rememberMeValue,
       });
 
-      await SharedPrefsHelper.setLoggedIn(true, userId: user['id']);
+      await _localRepo.setLoggedIn(true, userId: user['id']);
 
       if (mounted) {
         Navigator.pushAndRemoveUntil(
@@ -71,7 +70,7 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   void _showRememberedAccountsDialog() async {
-    final rememberedUsers = await DatabaseHelper.instance.getRememberedUsers();
+    final rememberedUsers = await _localRepo.getRememberedUsers();
     
     if (!mounted) return;
     if (rememberedUsers.isEmpty) {
@@ -100,7 +99,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     
                     // Proceed to login
                     setState(() { _isLoading = true; });
-                    await SharedPrefsHelper.setLoggedIn(true, userId: user['id']);
+                    await _localRepo.setLoggedIn(true, userId: user['id']);
                     if (mounted) {
                       Navigator.pushAndRemoveUntil(
                         context,

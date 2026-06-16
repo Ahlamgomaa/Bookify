@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../Core/constants.dart';
-import '../../../Data/Local/database_helper.dart';
-import '../../../Data/Local/shared_prefs_helper.dart';
+import '../../../Data/repository/local_repository.dart';
 import '../../Auth/SignIn/sign_in_screen.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -13,6 +12,7 @@ class CustomDrawer extends StatefulWidget {
 }
 
 class _CustomDrawerState extends State<CustomDrawer> {
+  final _localRepo = LocalRepository();
   String _userName = '';
 
   @override
@@ -22,9 +22,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }
 
   Future<void> _loadUserName() async {
-    final userId = await SharedPrefsHelper.getUserId();
+    final userId = await _localRepo.getUserId();
     if (userId == null) return;
-    final user = await DatabaseHelper.instance.getUserById(userId);
+    final user = await _localRepo.getUserById(userId);
     if (user != null && mounted) {
       setState(() {
         _userName = user['name'] ?? '';
@@ -124,7 +124,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   ),
                 ),
                 onTap: () async {
-                  await SharedPrefsHelper.logout();
+                  await _localRepo.logout();
                   if (context.mounted) {
                     Navigator.pushAndRemoveUntil(
                       context,

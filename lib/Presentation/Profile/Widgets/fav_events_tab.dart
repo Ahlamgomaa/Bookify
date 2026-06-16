@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../Data/Local/database_helper.dart';
-import '../../../Data/Local/shared_prefs_helper.dart';
+import '../../../Data/repository/local_repository.dart';
 import '../../../Data/data_source/events_data_source.dart';
 import '../../../Data/repository/events_repository.dart';
 import '../../../Data/Models/event_model.dart';
@@ -14,6 +13,7 @@ class FavEventsTab extends StatefulWidget {
 }
 
 class _FavEventsTabState extends State<FavEventsTab> {
+  final _localRepo = LocalRepository();
   List<EventModel> _favEvents = [];
   bool _isLoading = true;
 
@@ -24,13 +24,13 @@ class _FavEventsTabState extends State<FavEventsTab> {
   }
 
   Future<void> _loadFavorites() async {
-    final userId = await SharedPrefsHelper.getUserId();
+    final userId = await _localRepo.getUserId();
     if (userId == null) {
       if (mounted) setState(() { _isLoading = false; });
       return;
     }
 
-    final favRows = await DatabaseHelper.instance.getUserFavorites(userId);
+    final favRows = await _localRepo.getUserFavorites(userId);
     final repository = EventsRepository(EventsDataSource());
     final List<EventModel> events = [];
 

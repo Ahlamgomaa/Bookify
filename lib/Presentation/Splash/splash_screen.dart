@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../OnBoarding/OnBoarding_Screen.dart';
 import '../Home/home_screen.dart';
-import '../../Data/Local/shared_prefs_helper.dart';
+import '../../Data/repository/local_repository.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,13 +13,15 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final _localRepo = LocalRepository();
+
   @override
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () async {
       if (!mounted) return;
 
-      final isLogged = await SharedPrefsHelper.isLoggedIn();
+      final isLogged = await _localRepo.isLoggedIn();
 
       if (!mounted) return;
       Navigator.pushReplacement(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../Core/constants.dart';
-import '../../../Data/Local/database_helper.dart';
-import '../../../Data/Local/shared_prefs_helper.dart';
+import '../../../Data/repository/local_repository.dart';
 
 class ProfileHeader extends StatefulWidget {
   const ProfileHeader({super.key});
@@ -11,6 +10,7 @@ class ProfileHeader extends StatefulWidget {
 }
 
 class _ProfileHeaderState extends State<ProfileHeader> {
+  final _localRepo = LocalRepository();
   String _userName = '';
 
   @override
@@ -20,9 +20,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   }
 
   Future<void> _loadUserName() async {
-    final userId = await SharedPrefsHelper.getUserId();
+    final userId = await _localRepo.getUserId();
     if (userId == null) return;
-    final user = await DatabaseHelper.instance.getUserById(userId);
+    final user = await _localRepo.getUserById(userId);
     if (user != null && mounted) {
       setState(() {
         _userName = user['name'] ?? '';
