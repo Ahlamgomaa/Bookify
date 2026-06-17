@@ -6,9 +6,9 @@ import '../../../Data/Models/category_model.dart';
 
 class HomeHeader extends StatelessWidget {
   final AdvancedDrawerController controller;
-  final Future<List<CategoryModel>>? categoriesFuture;
+  final List<CategoryModel> categories;
 
-  const HomeHeader({super.key, required this.controller, this.categoriesFuture});
+  const HomeHeader({super.key, required this.controller, required this.categories});
 
   @override
   Widget build(BuildContext context) {
@@ -107,37 +107,26 @@ class HomeHeader extends StatelessWidget {
   }
 
   Widget _buildCategories(BuildContext context) {
+    if (categories.isEmpty) {
+      return const SizedBox();
+    }
+    final colors = [const Color(0xFFFF8D5D), const Color(0xFF7D67FF), const Color(0xFF00C7BE)];
+    
     return SizedBox(
       height: 45,
-      child: categoriesFuture == null 
-        ? const SizedBox() 
-        : FutureBuilder<List<CategoryModel>>(
-            future: categoriesFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const SizedBox();
-              }
-              final categories = snapshot.data!;
-              final colors = [const Color(0xFFFF8D5D), const Color(0xFF7D67FF), const Color(0xFF00C7BE)];
-              
-              return ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  return _categoryItem(
-                    context, 
-                    cat.name, 
-                    Icons.category, // using generic icon
-                    colors[index % colors.length]
-                  );
-                },
-              );
-            },
-          ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final cat = categories[index];
+          return _categoryItem(
+            context, 
+            cat.name, 
+            Icons.category, 
+            colors[index % colors.length]
+          );
+        },
+      ),
     );
   }
 

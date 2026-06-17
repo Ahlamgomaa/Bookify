@@ -1,85 +1,49 @@
 import 'package:flutter/material.dart';
-import '../../../Data/repository/local_repository.dart';
-import '../../../Data/data_source/events_data_source.dart';
-import '../../../Data/repository/events_repository.dart';
-import '../../../Data/Models/event_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../Events/Widgets/event_cards.dart';
+import '../Manager/profile_cubit.dart';
 
-class FavEventsTab extends StatefulWidget {
+class FavEventsTab extends StatelessWidget {
   const FavEventsTab({super.key});
 
   @override
-  State<FavEventsTab> createState() => _FavEventsTabState();
-}
-
-class _FavEventsTabState extends State<FavEventsTab> {
-  final _localRepo = LocalRepository();
-  List<EventModel> _favEvents = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFavorites();
-  }
-
-  Future<void> _loadFavorites() async {
-    final userId = await _localRepo.getUserId();
-    if (userId == null) {
-      if (mounted) setState(() { _isLoading = false; });
-      return;
-    }
-
-    final favRows = await _localRepo.getUserFavorites(userId);
-    final repository = EventsRepository(EventsDataSource());
-    final List<EventModel> events = [];
-
-    for (final row in favRows) {
-      final eventId = row['event_id'].toString();
-      try {
-        final event = await repository.getEventDetails(eventId);
-        if (event != null) events.add(event);
-      } catch (_) {
-        // Skip events that can't be loaded
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _favEvents = events;
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return BlocProvider(
+      create: (context) => ProfileCubit()..loadFavoriteEvents(),
+      child: BlocBuilder<ProfileCubit, ProfileState>(
+        builder: (context, state) {
+          if (state is ProfileLoading || state is ProfileInitial) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is ProfileError) {
+            return Center(child: Text('Error: ${state.message}'));
+          } else if (state is ProfileLoaded) {
+            if (state.favEvents.isEmpty) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.bookmark_border, size: 60, color: Colors.grey),
+                    SizedBox(height: 12),
+                    Text(
+                      "No favorite events yet",
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-    if (_favEvents.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bookmark_border, size: 60, color: Colors.grey),
-            SizedBox(height: 12),
-            Text(
-              "No favorite events yet",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      itemCount: _favEvents.length,
-      itemBuilder: (context, index) {
-        return EventCards(event: _favEvents[index]);
-      },
+            return ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              itemCount: state.favEvents.length,
+              itemBuilder: (context, index) {
+                return EventCards(event: state.favEvents[index]);
+              },
+            );
+          }
+          return const SizedBox();
+        },
+      ),
     );
   }
 }

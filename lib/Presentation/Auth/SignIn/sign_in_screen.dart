@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../Core/constants.dart';
 import '../../../Data/repository/local_repository.dart';
 import '../../Home/home_screen.dart';
 import '../SigUp/sign_up_screen.dart';
+import '../Manager/auth_cubit.dart';
+import '../Widgets/custom_text_field.dart';
+import '../Widgets/social_login_button.dart';
+import '../Widgets/shimmer_loading_button.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -12,61 +17,16 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _localRepo = LocalRepository();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isLoading = false;
   bool _rememberMe = false;
+  final _localRepo = LocalRepository();
 
-  void _signIn() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter email and password')));
-      return;
-    }
-
-    setState(() { _isLoading = true; });
-
-    try {
-      final user = await _localRepo.getUserByEmail(email);
-      if (user == null) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User not found')));
-        return;
-      }
-
-      final storedPassword = await _localRepo.getPassword(email);
-      if (storedPassword != password) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Incorrect password')));
-        return;
-      }
-
-      // Update remember_me flag
-      int rememberMeValue = _rememberMe ? 1 : 0;
-      await _localRepo.updateUser({
-        'id': user['id'],
-        'name': user['name'],
-        'email': user['email'],
-        'remember_me': rememberMeValue,
-      });
-
-      await _localRepo.setLoggedIn(true, userId: user['id']);
-
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally {
-      if (mounted) {
-        setState(() { _isLoading = false; });
-      }
-    }
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   void _showRememberedAccountsDialog() async {
@@ -80,7 +40,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Select Account'),
           content: SizedBox(
@@ -95,18 +55,8 @@ class _SignInScreenState extends State<SignInScreen> {
                   title: Text(user['name'] ?? ''),
                   subtitle: Text(user['email'] ?? ''),
                   onTap: () async {
-                    Navigator.pop(context); // close dialog
-                    
-                    // Proceed to login
-                    setState(() { _isLoading = true; });
-                    await _localRepo.setLoggedIn(true, userId: user['id']);
-                    if (mounted) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => const HomeScreen()),
-                        (route) => false,
-                      );
-                    }
+                    Navigator.pop(dialogContext);
+                    context.read<AuthCubit>().loginWithSavedAccount(user['id']);
                   },
                 );
               },
@@ -119,140 +69,156 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 60),
-              Image.asset('assets/images/splash_logo.png', height: 100),
-              const SizedBox(height: 40),
-              const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("Sign in", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.navyBlue))),
-              const SizedBox(height: 18),
+    return BlocProvider(
+      create: (context) => AuthCubit(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: BlocConsumer<AuthCubit, AuthState>(
+            listener: (context, state) {
+              if (state is AuthSuccess) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  (route) => false,
+                );
+              } else if (state is AuthFailure) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error)));
+              }
+            },
+            builder: (context, state) {
+              final isLoading = state is AuthLoading;
 
-              _buildField("ahlam@email.com", Icons.email_outlined, controller: _emailController),
-              const SizedBox(height: 16),
-              _buildField("Enter Your password", Icons.lock_outline, obscure: true, showEye: true, controller: _passwordController),
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 60),
+                    Image.asset('assets/images/splash_logo.png', height: 100),
+                    const SizedBox(height: 40),
+                    const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("Sign in", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.navyBlue))),
+                    const SizedBox(height: 18),
 
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity, height: 55,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.navyBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  onPressed: _isLoading ? null : _signIn,
-                  child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Sign In", style: TextStyle(color:Colors.white , fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(height: 15),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Checkbox(
-                    value: _rememberMe,
-                    activeColor: AppColors.pumpkinOrange,
-                    onChanged: (value) {
-                      setState(() {
-                        _rememberMe = value ?? false;
-                      });
-                    },
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _rememberMe = !_rememberMe;
-                      });
-                    },
-                    child: const Text(
-                      "Remember me",
-                      style: TextStyle(
-                        color: AppColors.navyBlue,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    CustomTextField(
+                      hint: "Enter Your email",
+                      icon: Icons.email_outlined,
+                      controller: _emailController,
                     ),
-                  ),
-                  const SizedBox(width: 15),
-                  GestureDetector(
-                    onTap: _showRememberedAccountsDialog,
-                    child: const Text(
-                      "Saved Accounts",
-                      style: TextStyle(
-                        color: AppColors.pumpkinOrange,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                      ),
+                    const SizedBox(height: 16),
+                    CustomTextField(
+                      hint: "Enter Your password",
+                      icon: Icons.lock_outline,
+                      obscureText: true,
+                      showEye: true,
+                      controller: _passwordController,
                     ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 15),
-              const Text("OR", style: TextStyle(color: AppColors.navyBlue)),
-              const SizedBox(height: 15),
 
-              _socialButton("Login with Google", Icons.g_mobiledata),
+                    const SizedBox(height: 30),
+                    ShimmerLoadingButton(
+                      text: "Sign In",
+                      isLoading: isLoading,
+                      onPressed: () {
+                        final email = _emailController.text.trim();
+                        final password = _passwordController.text;
 
-              const SizedBox(height: 20),
+                        if (email.isEmpty || password.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter email and password')));
+                          return;
+                        }
 
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                  );
-                },
-                child: RichText(
-                  text: const TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Don't have an account? ",
-                        style: TextStyle(color: AppColors.navyBlue, fontSize: 14),
-                      ),
-                      TextSpan(
-                        text: "Sign up",
-                        style: TextStyle(
-                          color: AppColors.pumpkinOrange,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                        context.read<AuthCubit>().signIn(email, password, _rememberMe);
+                      },
+                    ),
+                    const SizedBox(height: 15),
+                    
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Checkbox(
+                          value: _rememberMe,
+                          activeColor: AppColors.pumpkinOrange,
+                          onChanged: (value) {
+                            setState(() {
+                              _rememberMe = value ?? false;
+                            });
+                          },
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _rememberMe = !_rememberMe;
+                            });
+                          },
+                          child: const Text(
+                            "Remember me",
+                            style: TextStyle(
+                              color: AppColors.navyBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        GestureDetector(
+                          onTap: () => _showRememberedAccountsDialog(),
+                          child: const Text(
+                            "Saved Accounts",
+                            style: TextStyle(
+                              color: AppColors.pumpkinOrange,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 15),
+                    const Text("OR", style: TextStyle(color: AppColors.navyBlue)),
+                    const SizedBox(height: 15),
+
+                    SocialLoginButton(
+                      text: "Login with Google",
+                      icon: Icons.g_mobiledata,
+                      onPressed: () {},
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                        );
+                      },
+                      child: RichText(
+                        text: const TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "Don't have an account? ",
+                              style: TextStyle(color: AppColors.navyBlue, fontSize: 14),
+                            ),
+                            TextSpan(
+                              text: "Sign up",
+                              style: TextStyle(
+                                color: AppColors.pumpkinOrange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
     );
   }
-
-  Widget _buildField(String hint, IconData icon, {bool obscure = false, bool showEye = false, TextEditingController? controller}) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(icon, color: AppColors.navyBlue),
-        suffixIcon: showEye ? const Icon(Icons.visibility_off, color: Colors.grey) : null,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  Widget _socialButton(String text, IconData icon) {
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 55),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-      onPressed: () {},
-      icon: Icon(icon, size: 28, color: AppColors.pumpkinOrange),
-      label: Text(text, style: const TextStyle(color:  AppColors.pumpkinOrange, fontWeight: FontWeight.w500)),
-    );
-  }
-}
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import '../../Core/constants.dart';
 import '../Events/events_screen.dart';
@@ -8,10 +9,7 @@ import 'Widgets/home_header.dart';
 import 'Widgets/event_card.dart';
 import 'Widgets/invite_banner.dart';
 import 'Widgets/custom_drawer.dart';
-import '../../Data/data_source/events_data_source.dart';
-import '../../Data/repository/events_repository.dart';
-import '../../Data/Models/event_model.dart';
-import '../../Data/Models/category_model.dart';
+import 'Manager/home_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,20 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final _advancedDrawerController = AdvancedDrawerController();
   int _currentIndex = 0;
   int _profileKey = 0;
-  
-  late EventsRepository repository;
-  late Future<List<EventModel>> homeEventsFuture;
-  late Future<List<EventModel>> nearbyEventsFuture;
-  late Future<List<CategoryModel>> categoriesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    repository = EventsRepository(EventsDataSource());
-    homeEventsFuture = repository.getHomeEvents();
-    nearbyEventsFuture = repository.getNearbyEvents("51.5074,-0.1278");
-    categoriesFuture = repository.getCategories();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,100 +33,114 @@ class _HomeScreenState extends State<HomeScreen> {
         body: IndexedStack(
           index: _currentIndex,
           children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  HomeHeader(
-                    controller: _advancedDrawerController, 
-                    categoriesFuture: categoriesFuture
-                  ),
-                  const SizedBox(height: 40),
-                  _buildSectionHeader("Upcoming Events", onSeeAllTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const EventsScreen()),
+            BlocProvider(
+              create: (context) => HomeCubit()..loadHomeData(),
+              child: BlocBuilder<HomeCubit, HomeState>(
+                builder: (context, state) {
+                  if (state is HomeLoading || state is HomeInitial) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is HomeError) {
+                    return Center(child: Text('Error: ${state.message}'));
+                  } else if (state is HomeLoaded) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          HomeHeader(
+                            controller: _advancedDrawerController,
+                            categories: state.categories,
+                          ),
+                          const SizedBox(height: 40),
+                          _buildSectionHeader("Upcoming Events", onSeeAllTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const EventsScreen()),
+                            );
+                          }),
+                          SizedBox(
+                            height: 280,
+                            child: state.homeEvents.isEmpty
+                                ? const Center(child: Text('No events found'))
+                                : ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.only(left: 20),
+                                    itemCount: state.homeEvents.length,
+                                    itemBuilder: (context, index) => EventCard(event: state.homeEvents[index]),
+                                  ),
+                          ),
+                          const InviteBanner(),
+                          _buildSectionHeader("Nearby You"),
+                          SizedBox(
+                            height: 280,
+                            child: state.nearbyEvents.isEmpty
+                                ? const Center(child: Text('No events found nearby'))
+                                : ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.only(left: 20),
+                                    itemCount: state.nearbyEvents.length,
+                                    itemBuilder: (context, index) => EventCard(event: state.nearbyEvents[index]),
+                                  ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     );
-                  }),
-                  SizedBox(
-                    height: 280,
-                    child: FutureBuilder<List<EventModel>>(
-                      future: homeEventsFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        if (snapshot.hasError) {
-                          return const Center(child: Text('Error loading events'));
-                        }
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return const Center(child: Text('No events found'));
-                        }
-                        final events = snapshot.data!;
-                        return ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.only(left: 20),
-                          itemCount: events.length,
-                          itemBuilder: (context, index) => EventCard(event: events[index]),
-                        );
-                      },
-                    ),
-                  ),
-                  const InviteBanner(),
-                  _buildSectionHeader("Nearby You"),
-                  SizedBox(
-                    height: 280,
-                    child: FutureBuilder<List<EventModel>>(
-                      future: nearbyEventsFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        if (snapshot.hasError) {
-                          return const Center(child: Text('Error loading events'));
-                        }
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return const Center(child: Text('No events found nearby'));
-                        }
-                        final events = snapshot.data!;
-                        return ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.only(left: 20),
-                          itemCount: events.length,
-                          itemBuilder: (context, index) => EventCard(event: events[index]),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                  }
+                  return const SizedBox();
+                },
               ),
             ),
             const EmptyEventsScreen(),
-
-            const Center(child: Text("Profile Page")),
             OrganizerProfileScreen(key: ValueKey(_profileKey)),
           ],
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-              if (index == 3) _profileKey++;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: AppColors.navyBlue,
-          unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore),
-              label: 'Explore',
+        bottomNavigationBar: Container(
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
-            BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          ],
+            boxShadow: [
+              BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                  if (index == 2) _profileKey++;
+                });
+              },
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: AppColors.navyBlue,
+              unselectedItemColor: Colors.grey,
+              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
+              selectedIconTheme: const IconThemeData(size: 28),
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.explore_outlined),
+                  activeIcon: Icon(Icons.explore),
+                  label: 'Explore',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.event_outlined),
+                  activeIcon: Icon(Icons.event),
+                  label: 'Events',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  activeIcon: Icon(Icons.person),
+                  label: 'Profile',
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

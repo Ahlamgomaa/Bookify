@@ -1,60 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../Core/constants.dart';
 import 'Widgets/buy_ticket_button.dart';
 import 'Widgets/event_details_sheet.dart';
 import 'Widgets/event_header_image.dart';
 import 'Widgets/header_bar.dart';
+import 'Manager/event_details_cubit.dart';
 
-
-import '../../Data/data_source/events_data_source.dart';
-import '../../Data/repository/events_repository.dart';
-import '../../Data/Models/event_model.dart';
-
-class EventDetailsScreen extends StatefulWidget {
+class EventDetailsScreen extends StatelessWidget {
   final String? eventId;
 
   const EventDetailsScreen({super.key, this.eventId});
 
   @override
-  State<EventDetailsScreen> createState() => _EventDetailsScreenState();
-}
-
-class _EventDetailsScreenState extends State<EventDetailsScreen> {
-  late EventsRepository repository;
-  late Future<EventModel?> eventFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    repository = EventsRepository(EventsDataSource());
-    if (widget.eventId != null) {
-      eventFuture = repository.getEventDetails(widget.eventId!);
-    } else {
-      eventFuture = Future.value(null);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: FutureBuilder<EventModel?>(
-        future: eventFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+    return BlocProvider(
+      create: (context) => EventDetailsCubit()..loadEventDetails(eventId),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: BlocBuilder<EventDetailsCubit, EventDetailsState>(
+          builder: (context, state) {
+            if (state is EventDetailsLoading || state is EventDetailsInitial) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is EventDetailsError) {
+              return Center(child: Text('Error: ${state.message}'));
+            } else if (state is EventDetailsLoaded) {
+              final event = state.event;
+              
+              return Stack(
+                children: [
+                  EventHeaderImage(imageUrl: event?.imageUrl),
+                  HeaderBar(eventId: eventId),
+                  EventDetailsSheet(event: event), 
+                  const BuyTicketButton(),
+                ],
+              );
+            }
+            return const SizedBox();
           }
-          final event = snapshot.data;
-          
-          return Stack(
-            children: [
-              EventHeaderImage(imageUrl: event?.imageUrl),
-              HeaderBar(eventId: widget.eventId),
-              EventDetailsSheet(event: event), 
-              const BuyTicketButton(),
-            ],
-          );
-        }
+        ),
       ),
     );
   }
